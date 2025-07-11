@@ -15,18 +15,26 @@ class User extends Model
     protected $allowedFields = ['username', 'email'];
 
     // Timestamps
-    protected $useTimestamps = false; // Set to true if you have 'created_at' and 'updated_at' fields
-    // protected $createdField  = 'created_at';
-    // protected $updatedField  = 'updated_at';
+    protected $useTimestamps = true; // Set to true if you have 'created_at' and 'updated_at' fields
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
     // protected $deletedField  = 'deleted_at';
 
     // Validation
     protected $validationRules    = [
-        'username' => 'required|alpha_numeric_space|min_length[3]|max_length[255]',
+        'username' => 'required|alpha_numeric_space|min_length[3]|max_length[255]|is_unique[users.username]',
         'email'    => 'required|valid_email|is_unique[users.email]',
     ];
-    protected $validationMessages = [];
+    protected $validationMessages = [
+        'username' => [
+            'is_unique' => 'Sorry, that username has already been taken.'
+        ],
+        'email' => [
+            'is_unique' => 'Sorry, that email has already been taken.'
+        ]
+    ];
     protected $skipValidation     = false;
+    protected $cleanValidationRules = true; // Added for better validation management
 
     // Callbacks
     protected $allowCallbacks = true;
@@ -37,26 +45,4 @@ class User extends Model
     protected $beforeFind     = [];
     protected $afterFind      = [];
     protected $afterDelete    = [];
-
-    // For demonstration, let's add a simple in-memory "database"
-    private static $inMemoryData = [
-        1 => ['id' => 1, 'username' => 'JohnDoe', 'email' => 'john@example.com'],
-        2 => ['id' => 2, 'username' => 'JaneSmith', 'email' => 'jane@example.com'],
-    ];
-
-    public function find($id = null)
-    {
-        if ($id === null) {
-            return array_values(self::$inMemoryData);
-        }
-        return self::$inMemoryData[$id] ?? null;
-    }
-
-    public function insert($data = null, bool $returnID = true)
-    {
-        $id = count(self::$inMemoryData) + 1;
-        $data['id'] = $id;
-        self::$inMemoryData[$id] = $data;
-        return $returnID ? $id : true;
-    }
 }
