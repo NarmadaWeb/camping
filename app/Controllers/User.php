@@ -37,21 +37,37 @@ class User extends Controller
 
     public function create()
     {
-        helper('form'); // Load form helper for validation
+        helper(['form', 'session']); // Load form and session helpers
 
-        $rules = [
-            'username' => 'required|min_length[3]|max_length[255]',
-            'email'    => 'required|valid_email|is_unique[users.email]',
-        ];
-
-        if (! $this->validate($rules)) {
-            return view('users/new', ['validation' => $this->validator]);
-        }
-
-        $this->userModel->save([
+        $data = [
             'username' => $this->request->getPost('username'),
             'email'    => $this->request->getPost('email'),
-        ]);
+        ];
+
+        if (! $this->userModel->save($data)) {
+            // Validation failed, return to form with errors
+            session()->setFlashdata('errors', $this->userModel->errors());
+            return redirect()->back()->withInput();
+        }
+
+        session()->setFlashdata('message', 'User created successfully.');
+        return redirect()->to('/users');
+    }
+
+    public function delete($id = null)
+    {
+        helper('session'); // Load session helper
+
+        if ($id === null) {
+            session()->setFlashdata('error', 'User ID not provided for deletion.');
+            return redirect()->to('/users');
+        }
+
+        if ($this->userModel->delete($id)) {
+            session()->setFlashdata('message', 'User deleted successfully.');
+        } else {
+            session()->setFlashdata('error', 'Failed to delete user or user not found.');
+        }
 
         return redirect()->to('/users');
     }
